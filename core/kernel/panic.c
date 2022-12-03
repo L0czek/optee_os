@@ -8,6 +8,7 @@
 #include <kernel/thread.h>
 #include <kernel/unwind.h>
 #include <trace.h>
+#include "fuzzer/instrumentation.h"
 
 void __do_panic(const char *file __maybe_unused,
 		const int line __maybe_unused,
@@ -29,6 +30,7 @@ void __do_panic(const char *file __maybe_unused,
 			 func ? "<" : "", func ? func : "", func ? ">" : "");
 
 	print_kernel_stack();
+    fuzzer_send_signal(SIGSEGV);
 	/* abort current execution */
 	while (1)
 		cpu_idle();

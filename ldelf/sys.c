@@ -8,6 +8,7 @@
 #include <trace.h>
 
 #include "sys.h"
+#include "instrumentation.h"
 
 int trace_level = TRACE_LEVEL;
 const char trace_ext_prefix[]  = "LD";
@@ -21,6 +22,8 @@ void __panic(const char *file __maybe_unused, const int line __maybe_unused,
 		EMSG_RAW("Panic at %s:%d %s%s%s",
 			 file ? file : "?", file ? line : 0,
 			 func ? "<" : "", func ? func : "", func ? ">" : "");
+
+    fuzzer_send_signal(SIGSEGV);
 
 	_ldelf_panic(1);
 	/*NOTREACHED*/

@@ -14,6 +14,7 @@
 #include <mm/core_mmu.h>
 #include <mm/mobj.h>
 #include <mm/tee_pager.h>
+#include <signal.h>
 #include <tee/tee_svc.h>
 #include <trace.h>
 #include <unw/unwind.h>
@@ -536,6 +537,16 @@ static enum fault_type get_fault_type(struct abort_info *ai)
 	}
 }
 
+#define SIGSEGV 11
+
+inline void fuzzer_send_signal(int signal) {
+    asm volatile (
+        "mov x0, %0\n"
+        "udf 142"
+        : : "r"(signal) : "x0"
+    );
+}
+
 void abort_handler(uint32_t abort_type, struct thread_abort_regs *regs)
 {
 	struct abort_info ai;
@@ -551,6 +562,7 @@ void abort_handler(uint32_t abort_type, struct thread_abort_regs *regs)
 		save_abort_info_in_tsd(&ai);
 		vfp_disable();
 		handle_user_mode_panic(&ai);
+        fuzzer_send_signal(SIGSEGV);
 		break;
 #ifdef CFG_WITH_VFP
 	case FAULT_TYPE_USER_MODE_VFP:
